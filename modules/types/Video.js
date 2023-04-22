@@ -32,6 +32,15 @@ class Video {
         } else if(liveData.includes("[ffmpeg] Adding metadata to '")) {
             const noPrefix = liveData.replace("[ffmpeg] Adding metadata to '", "");
             this.filename = path.basename(noPrefix.trim().slice(0, -1));
+        } else if(liveData.includes("[Merger] Merging formats into \"")) {
+            const noPrefix = liveData.replace("[Merger] Merging formats into \"", "");
+            this.filename = path.basename(noPrefix.trim().slice(0, -1));
+        } else if(liveData.includes("[ExtractAudio] Destination: ")) {
+            const replaced = liveData.replace("[ExtractAudio] Destination: ", "");
+            this.filename = path.basename(replaced);
+        } else if(liveData.includes("[Metadata] Adding metadata to '")) {
+            const noPrefix = liveData.replace("[Metadata] Adding metadata to '", "");
+            this.filename = path.basename(noPrefix.trim().slice(0, -1));
         }
     }
 

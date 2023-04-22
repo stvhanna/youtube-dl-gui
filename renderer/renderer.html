@@ -258,7 +258,7 @@
                     <input type="file" class="custom-file-input" id="fileInput">
                     <label id="fileInputLabel" class="custom-file-label" for="fileInput">Click to select cookies.txt</label>
                 </div>
-                <a target="_blank" href="https://github.com/jely2002/youtube-dl-gui/wiki/Tutorial:-Private-videos-&-playlists">What is a cookies.txt file?</a>
+                <a target="_blank" href="https://github.com/StefanLobbenmeier/youtube-dl-gui/wiki/Tutorial:-Private-videos-&-playlists">What is a cookies.txt file?</a>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn removeCookies btn-dark">Remove cookies</button>
@@ -273,7 +273,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="settingsModalLabel">App settings</h5>
-                <a class="help-button" target="_blank" href="https://github.com/jely2002/youtube-dl-gui/wiki/Settings" title="Help for settings"><i class="bi bi-question-circle"></i></a>
+                <a class="help-button" target="_blank" href="https://github.com/StefanLobbenmeier/youtube-dl-gui/wiki/Settings" title="Help for settings"><i class="bi bi-question-circle"></i></a>
                 <button type="button" class="close dismiss" aria-label="Close">&times;</button>
             </div>
             <div class="modal-body">
@@ -292,6 +292,25 @@
                     <input type="range" class="form-range w-50 d-block align-middle" min="1" max="32" id="maxConcurrent">
                     <button type="button" class="btn btn-dark" id="defaultConcurrent">Reset to default</button>
                 </div>
+                <div class="mb-4">
+                    <label for="fileAccessRetries" class="form-label">Info request retries:</label>
+                    <select class="custom-select d-block rounded w-auto mb-2" id="fileAccessRetries">
+                        <option value="3" selected>3</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="infinite">infinite</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="retries" class="form-label">Download retries:</label>
+                    <select class="custom-select d-block rounded w-auto mb-2" id="retries">
+                        <option value="10" selected>10</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="infinite">infinite</option>
+                    </select>
+                </div>
+
                 <hr/>
                 <h3>Appearance</h3>
                 <div class="mb-4">
@@ -374,12 +393,50 @@
                     <label class="check-label" for="downloadMetadata">Save metadata</label>
                 </div>
                 <div class="mb-1">
+                    <input class="check-input" type="checkbox" value="" id="downloadJsonMetadata">
+                    <label class="check-label" for="downloadJsonMetadata">Save JSON metadata</label>
+                </div>
+                <div class="mb-1">
                     <input class="check-input" type="checkbox" value="" id="downloadThumbnail">
                     <label class="check-label" for="downloadThumbnail">Save thumbnail as file</label>
                 </div>
                 <div class="mb-1">
                     <input class="check-input" type="checkbox" value="" id="keepUnmerged">
                     <label class="check-label" for="keepUnmerged">Keep unmerged files</label>
+                </div>
+                <div class="mb-1">
+                    <input class="check-input" type="checkbox" value="" id="avoidFailingToSaveDuplicateFileName">
+                    <label class="check-label" for="avoidFailingToSaveDuplicateFileName" title="When the target filename already exists, enumerate the filename (e.g. 'filename(1).mp4') at the cost of download resumability.">Avoid failing to save duplicate filename</label>
+                </div>
+                <hr/>
+                <h3>Sponsorblock</h3>
+                <div class="mb-3">
+                    <label for="subsLang" class="form-label d-block">Sections to mark as chapter:</label>
+                    <select class="w-75 mb-2" id="sponsorblockMark" multiple>
+                        <option value="sponsor">Sponsor</option>
+                        <option value="selfpromo">Self-promotion</option>
+                        <option value="interaction">Interaction reminder</option>
+                        <option value="intro">Intermission / Intro animation</option>
+                        <option value="outro">Endcards / Credits</option>
+                        <option value="preview">Preview / Recap</option>
+                        <option value="music_offtopic">Music off-topic</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="autoGenSubsLang" class="form-label d-block">Sections to remove:</label>
+                    <select class="w-75 mb-2" id="sponsorblockRemove" multiple>
+                        <option value="sponsor">Sponsor</option>
+                        <option value="selfpromo">Self-promotion</option>
+                        <option value="interaction">Interaction reminder</option>
+                        <option value="intro">Intermission / Intro animation</option>
+                        <option value="outro">Endcards / Credits</option>
+                        <option value="preview">Preview / Recap</option>
+                        <option value="music_offtopic">Music off-topic</option>
+                    </select>
+                </div>
+                <div class="mb-1">
+                    <label class="form-label" for="sponsorblockApi">Sponsorblock API location</label>
+                    <input class="form-control" type="text" value="" id="sponsorblockApi">
                 </div>
                 <hr/>
                 <h3>Advanced</h3>
@@ -388,8 +445,12 @@
                     <label class="check-label" for="taskList">Restore the queue after a restart</label>
                 </div>
                 <div class="mb-1">
-                    <input class="check-input" type="checkbox" value="" id="spoofUserAgent">
-                    <label class="check-label" for="spoofUserAgent">Spoof user-agent</label>
+                    <label class="check-label" for="userAgent">User Agent</label>
+                    <select class="custom-select d-block rounded w-auto mb-2" id="userAgent">
+                        <option value="spoof" selected>Spoof</option>
+                        <option value="empty">Empty</option>
+                        <option value="default">Default</option>
+                    </select>
                 </div>
                 <div class="mb-1">
                     <input class="check-input" type="checkbox" value="" id="validateCertificate">

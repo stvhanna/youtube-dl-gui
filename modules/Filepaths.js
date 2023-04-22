@@ -8,6 +8,7 @@ class Filepaths {
         this.env = env;
         this.appPath = this.app.getAppPath();
         this.platform = this.detectPlatform();
+        this.systemVersion = null
     }
 
      async generateFilepaths() {
@@ -15,12 +16,13 @@ class Filepaths {
             case "win32":
                 this.unpackedPrefix = path.join(path.dirname(this.appPath), "app.asar.unpacked");
                 this.packedPrefix = this.appPath;
-                this.ffmpeg = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries/ffmpeg.exe") : "binaries/ffmpeg.exe";
-                this.ytdl = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries/youtube-dl.exe") : "binaries/youtube-dl.exe";
+                this.ffmpeg = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries") : "binaries";
+                this.ytdl = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries/yt-dlp.exe") : "binaries/yt-dlp.exe";
                 this.icon = this.app.isPackaged ? path.join(this.packedPrefix, "renderer/img/icon.png") : "renderer/img/icon.png";
                 this.settings = this.app.isPackaged ? path.join(this.unpackedPrefix, "userSettings") : "userSettings";
                 this.taskList = this.app.isPackaged ? path.join(this.unpackedPrefix, "taskList") : "taskList";
                 this.ytdlVersion = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries/ytdlVersion") :"binaries/ytdlVersion";
+                this.ffmpegVersion = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries/ffmpegVersion") :"binaries/ffmpegVersion";
                 break;
             case "win32app": {
                 const appDir = path.basename(path.join(this.appPath, "../../..")).replace(/_(.*)_/g, "_");
@@ -28,13 +30,14 @@ class Filepaths {
                 this.persistentPath = path.join(this.app.getPath("appData"), "open-video-downloader-app");
                 this.unpackedPrefix = path.join(path.dirname(this.appPath), "app.asar.unpacked");
                 this.packedPrefix = this.appPath;
-                await this.createAppDataFolder();
-                this.ffmpeg = path.join(this.binaryPath, "ffmpeg.exe");
-                this.ytdl = path.join(this.binaryPath, "youtube-dl.exe");
+                await this.createFolder(this.persistentPath);
+                this.ffmpeg = this.binaryPath;
+                this.ytdl = path.join(this.binaryPath, "yt-dlp.exe");
                 this.icon = path.join(this.packedPrefix, "renderer/img/icon.png");
                 this.settings = path.join(this.binaryPath, "userSettings");
                 this.taskList = path.join(this.binaryPath, "taskList");
                 this.ytdlVersion = path.join(this.binaryPath, "ytdlVersion");
+                this.ffmpegVersion = path.join(this.binaryPath, "ffmpegVersion");
                 break;
             }
             case "win32portable":
@@ -42,40 +45,57 @@ class Filepaths {
                 this.unpackedPrefix = path.join(path.dirname(this.appPath), "app.asar.unpacked");
                 this.packedPrefix = this.appPath;
                 await this.createPortableFolder();
-                this.ffmpeg = path.join(this.persistentPath, "ffmpeg.exe");
-                this.ytdl = path.join(this.persistentPath, "youtube-dl.exe");
+                this.ffmpeg = this.persistentPath;
+                this.ytdl = path.join(this.persistentPath, "yt-dlp.exe");
                 this.icon = path.join(this.packedPrefix, "renderer/img/icon.png");
                 this.settings = path.join(this.persistentPath, "userSettings");
                 this.taskList = path.join(this.persistentPath, "taskList");
                 this.ytdlVersion = path.join(this.persistentPath, "ytdlVersion");
-                this.checkFfmpeg();
+                this.ffmpegVersion = path.join(this.persistentPath, "ffmpegVersion");
                 break;
             case "darwin":
                 this.packedPrefix = this.appPath;
                 this.unpackedPrefix = this.appPath + ".unpacked";
-                this.ffmpeg = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries/ffmpeg") : "binaries/ffmpeg";
-                this.ytdl = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries/youtube-dl-unix") : "binaries/youtube-dl-unix";
+                this.ffmpeg = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries") : "binaries";
+                this.ytdl = this.app.isPackaged ? path.join(this.unpackedPrefix, this.getMacOSPathYtDlp()) : this.getMacOSPathYtDlp();
                 this.icon = this.app.isPackaged ? path.join(this.packedPrefix, "renderer/img/icon.png") : "renderer/img/icon.png";
                 this.settings = this.app.isPackaged ? path.join(this.unpackedPrefix, "userSettings") : "userSettings";
                 this.taskList = this.app.isPackaged ? path.join(this.unpackedPrefix, "taskList") : "taskList";
                 this.ytdlVersion = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries/ytdlVersion") :"binaries/ytdlVersion";
+                this.ffmpegVersion = this.app.isPackaged ? path.join(this.unpackedPrefix, "binaries/ffmpegVersion") :"binaries/ffmpegVersion";
                 this.setPermissions()
                 break;
             case "linux":
                 this.persistentPath = path.join(this.app.getPath('home'), ".youtube-dl-gui");
                 this.packedPrefix = this.appPath;
                 this.unpackedPrefix = this.appPath + ".unpacked";
-                if(this.app.isPackaged) await this.createHomeFolder()
-                this.ytdl = this.app.isPackaged ? path.join(this.persistentPath, "youtube-dl-unix") : "binaries/youtube-dl-unix";
-                this.ffmpeg = this.app.isPackaged ? path.join(this.persistentPath, "ffmpeg") : "binaries/ffmpeg";
+                if(this.app.isPackaged) await this.createFolder(this.persistentPath);
+                this.ytdl = this.app.isPackaged ? path.join(this.persistentPath, "yt-dlp-unix") : "binaries/yt-dlp-unix";
+                this.ffmpeg = this.app.isPackaged ? this.persistentPath : "binaries";
                 this.icon = this.app.isPackaged ? path.join(this.packedPrefix, "renderer/img/icon.png") : "renderer/img/icon.png";
                 this.settings = this.app.isPackaged ? path.join(this.persistentPath, "userSettings") : "userSettings";
                 this.taskList = this.app.isPackaged ? path.join(this.persistentPath, "taskList") : "taskList";
                 this.ytdlVersion = this.app.isPackaged ? path.join(this.persistentPath, "ytdlVersion") :"binaries/ytdlVersion";
-                this.checkFfmpeg();
+                this.ffmpegVersion = this.app.isPackaged ? path.join(this.persistentPath, "ffmpegVersion") :"binaries/ffmpegVersion";
                 this.setPermissions()
                 break;
         }
+        await this.removeLeftOver();
+    }
+
+    getMacOSPathYtDlp() {
+        if (this.getSystemVersion() < "10.15"){
+            return "binaries/yt-dlp_macos_legacy";
+        } else {
+            return "binaries/yt-dlp_macos";
+        }
+    }
+
+    getSystemVersion() {
+        if (!this.systemVersion) {
+            this.systemVersion = process.getSystemVersion()
+        }
+        return this.systemVersion;
     }
 
     async validateDownloadPath() {
@@ -104,30 +124,20 @@ class Filepaths {
         else return process.platform;
     }
 
-    checkFfmpeg() {
-        try {
-            fs.promises.access(this.ffmpeg, fs.constants.F_OK).catch(() => {
-                const from = path.join(this.unpackedPrefix, "binaries");
-                fs.copyFileSync(path.join(from, "ffmpeg-linux"), this.ffmpeg);
-            })
-        } catch (e) {
-            console.error(e);
+    async removeLeftOver() {
+        const filename = process.platform === "win32" ? "youtube-dl.exe" : "youtube-dl-unix";
+        if (fs.existsSync(path.join(this.ffmpeg, filename))) {
+            await fs.promises.unlink(path.join(this.ffmpeg, filename));
         }
     }
 
     setPermissions() {
-        fs.chmod(this.ytdl, 0o755, (err) => {
-            if(err) console.error(err);
+        fs.readdirSync(this.ffmpeg).forEach(file => {
+            if (file === "userSettings" || file === "ytdlVersion" || file === "taskList" || file === "ffmpegVersion") return;
+            fs.chmod(path.join(this.ffmpeg, file), 0o755, (err) => {
+                if(err) console.error(err);
+            });
         });
-        fs.chmod(this.ffmpeg, 0o755, (err) => {
-            if(err) console.error(err);
-        });
-    }
-
-    async createAppDataFolder() {
-        const from = path.join(this.unpackedPrefix, "binaries");
-        const toCopy = ["youtube-dl.exe", "ffmpeg.exe", "ytdlVersion", "AtomicParsley.exe"];
-        await this.copyFiles(from, this.persistentPath, toCopy);
     }
 
     async createPortableFolder() {
@@ -135,12 +145,12 @@ class Filepaths {
             await fs.promises.access(process.env.PORTABLE_EXECUTABLE_DIR, fs.constants.W_OK);
             if(await this.migrateExistingAppDataFolder()) return;
             const from = path.join(this.unpackedPrefix, "binaries");
-            const toCopy = ["youtube-dl.exe", "ffmpeg.exe", "ytdlVersion", "AtomicParsley.exe"];
+            const toCopy = ["AtomicParsley.exe"];
             await this.copyFiles(from, this.persistentPath, toCopy);
         } catch (e) {
             setTimeout(() => console.error(e), 5000);
             this.persistentPath = path.join(this.app.getPath("appData"), "open-video-downloader");
-            await this.createAppDataFolder();
+            await this.createFolder(this.persistentPath);
         }
     }
 
@@ -148,7 +158,7 @@ class Filepaths {
         const from = path.join(this.app.getPath("appData"), "youtube-dl-gui-portable");
         try {
             await fs.promises.access(from, fs.constants.W_OK);
-            const toCopy = ["youtube-dl.exe", "ffmpeg.exe", "ytdlVersion", "userSettings", "taskList"];
+            const toCopy = ["yt-dlp.exe", "ffmpeg.exe", "ytdlVersion", "ffmpegVersion", "AtomicParsley.exe", "userSettings", "taskList"];
             await this.copyFiles(from, this.persistentPath, toCopy);
             try {
                 await fs.promises.rmdir(from, {recursive: true});
@@ -161,10 +171,12 @@ class Filepaths {
         }
     }
 
-    async createHomeFolder() {
-        const from = path.join(this.unpackedPrefix, "binaries");
-        const toCopy = ["youtube-dl-unix", "ffmpeg-linux", "ytdlVersion"];
-        await this.copyFiles(from, this.persistentPath, toCopy);
+    async createFolder(path) {
+        await new Promise((resolve) => {
+            mkdirp(path).then(() => {
+                resolve();
+            });
+        });
     }
 
     async copyFiles(from, to, files) {
@@ -182,12 +194,47 @@ class Filepaths {
 
     copyFile(from, to, filename) {
         const fromFile = path.join(from, filename);
-        const toFile = path.join(to, filename === "ffmpeg-linux" ? "ffmpeg" : filename);
+        const toFile = path.join(to, filename);
         try {
             fs.copyFileSync(fromFile, toFile);
         } catch (e) {
-            console.error("Could not copy " + filename + " to " + to + ".");
+            console.error("Could not copy " + filename + " to " + to + " : " + e);
         }
+    }
+
+    moveFile(from, to, filename) {
+        const fromFile = path.join(from, filename);
+        let toFile = path.join(to, filename);
+
+        toFile = this.indexFileIfAlreadyExists(toFile);
+
+        try {
+            fs.renameSync(fromFile, toFile);
+        } catch (e) {
+            console.error("Could not move " + filename + " to " + to + " : " + e);
+        }
+    }
+
+    indexFileIfAlreadyExists(filePath) {
+        let newFilePath = filePath;
+
+        let splitPath = newFilePath.split('.');
+        let fileExt = "";
+        let fileName = newFilePath;
+
+        if(splitPath.length > 1) {
+            fileExt = "." + splitPath[splitPath.length - 1]
+            fileName = fileName.replace(fileExt, "");
+        }
+
+        let index = 0;
+
+        while(fs.existsSync(newFilePath)) {
+            index += 1;
+            newFilePath = fileName + "(" + index + ")" + fileExt;
+        }
+
+        return newFilePath;
     }
 }
 

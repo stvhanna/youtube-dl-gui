@@ -104,6 +104,8 @@ async function init() {
     //Initialize select2
     $("#subsLang").select2({width: '75%', placeholder: "Select subtitles", language: {noResults: () => "No subtitles found"}});
     $("#autoGenSubsLang").select2({width: '75%', placeholder: "Select auto-generated subtitles", language: {noResults: () => "No subtitles found"}} );
+    $("#sponsorblockMark").select2({width: '75%', placeholder: "Select sections of a video to mark"});
+    $("#sponsorblockRemove").select2({width: '75%', placeholder: "Select sections of a video to remove"});
 
     //Add url when user presses enter, but prevent default behavior
     $(document).on("keydown", "form", function(event) {
@@ -540,7 +542,9 @@ async function addVideo(args) {
                     $(elem).toggle(isAudio)
                 }
             }
-            $(template).find('.custom-select.download-quality').val(isAudio ? "best" : args.formats[args.selected_format_index].display_name).change();
+            if (args.formats.length > 0) {
+                $(template).find('.custom-select.download-quality').val(isAudio ? "best" : args.formats[args.selected_format_index].display_name).change();
+            }
         });
 
         if(args.formats.length === 0) {
@@ -976,7 +980,7 @@ async function getSettings() {
     const settings = await window.main.invoke("settingsAction", {action: "get"});
     $('#updateBinary').prop('checked', settings.updateBinary);
     $('#updateApplication').prop('checked', settings.updateApplication);
-    $('#spoofUserAgent').prop('checked', settings.spoofUserAgent);
+    $('#userAgent').val(settings.userAgent);
     $('#validateCertificate').prop('checked', settings.validateCertificate);
     $('#enableEncoding').prop('checked', settings.enableEncoding);
     $('#taskList').prop('checked', settings.taskList);
@@ -989,11 +993,18 @@ async function getSettings() {
     $('#nameFormat').val(settings.nameFormatMode);
     $('#outputFormat').val(settings.outputFormat);
     $('#audioOutputFormat').val(settings.audioOutputFormat);
+    $('#sponsorblockMark').val(settings.sponsorblockMark.split(",")).change();
+    $('#sponsorblockRemove').val(settings.sponsorblockRemove.split(",")).change();
+    $('#sponsorblockApi').val(settings.sponsorblockApi);
     $('#downloadMetadata').prop('checked', settings.downloadMetadata);
+    $('#downloadJsonMetadata').prop('checked', settings.downloadJsonMetadata);
     $('#downloadThumbnail').prop('checked', settings.downloadThumbnail);
     $('#keepUnmerged').prop('checked', settings.keepUnmerged);
+    $('#avoidFailingToSaveDuplicateFileName').prop('checked', settings.avoidFailingToSaveDuplicateFileName);
     $('#calculateTotalSize').prop('checked', settings.calculateTotalSize);
     $('#maxConcurrent').val(settings.maxConcurrent);
+    $('#settingsModal #retries').val(settings.retries);
+    $('#settingsModal #fileAccessRetries').val(settings.fileAccessRetries);
     $('#concurrentLabel').html(`Max concurrent jobs <strong>(${settings.maxConcurrent})</strong>`);
     $('#sizeSetting').val(settings.sizeMode);
     $('#splitMode').val(settings.splitMode);
@@ -1012,20 +1023,27 @@ function sendSettings() {
         outputFormat: $('#outputFormat').val(),
         audioOutputFormat: $('#audioOutputFormat').val(),
         proxy: $('#proxySetting').val(),
-        spoofUserAgent: $('#spoofUserAgent').prop('checked'),
+        userAgent: $('#userAgent').val(),
         validateCertificate: $('#validateCertificate').prop('checked'),
         enableEncoding: $('#enableEncoding').prop('checked'),
         taskList: $('#taskList').prop('checked'),
         nameFormatMode: $('#nameFormat').val(),
         nameFormat: $('#nameFormatCustom').val(),
+        sponsorblockMark: $('#sponsorblockMark').val().join(","),
+        sponsorblockRemove: $('#sponsorblockRemove').val().join(","),
+        sponsorblockApi: $('#sponsorblockApi').val(),
         downloadMetadata: $('#downloadMetadata').prop('checked'),
+        downloadJsonMetadata: $('#downloadJsonMetadata').prop('checked'),
         downloadThumbnail: $('#downloadThumbnail').prop('checked'),
         keepUnmerged: $('#keepUnmerged').prop('checked'),
+        avoidFailingToSaveDuplicateFileName: $('#avoidFailingToSaveDuplicateFileName').prop('checked'),
         calculateTotalSize: $('#calculateTotalSize').prop('checked'),
         sizeMode: $('#sizeSetting').val(),
         splitMode: $('#splitMode').val(),
         rateLimit: $('#ratelimitSetting').val(),
         maxConcurrent: parseInt($('#maxConcurrent').val()),
+        retries: $('#settingsModal #retries').val(),
+        fileAccessRetries: $('#settingsModal #fileAccessRetries').val(),
         downloadType: $('#download-type').val(),
         theme: $('#theme').val()
     }

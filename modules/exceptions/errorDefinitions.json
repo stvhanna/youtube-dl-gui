@@ -209,7 +209,7 @@
   },
   {
     "code": "Missing dependency",
-    "description": "Please install <a href=\"https://github.com/jely2002/youtube-dl-gui#how-to-use\" target=\"_blank\"> Microsoft Visual C++ 2010</a>",
+    "description": "Please install <a href=\"https://github.com/StefanLobbenmeier/youtube-dl-gui#how-to-use\" target=\"_blank\"> Microsoft Visual C++ 2010</a>",
     "trigger": "3221225781"
   },
   {
@@ -267,5 +267,10 @@
     "code": "Thumbnail embedding not supported",
     "description": "Only mp3 and m4a/mp4 are supported for thumbnail embedding for now.",
     "trigger": "ERROR: Only mp3 and m4a/mp4 are supported for thumbnail embedding for now."
+  },
+  {
+    "code": "SponsorBlock API unreachable",
+    "description": "Unable to communicate with SponsorBlock API, please try again.",
+    "trigger": "ERROR: Unable to communicate with SponsorBlock API"
   }
 ]

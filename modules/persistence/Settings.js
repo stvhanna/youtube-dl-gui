@@ -5,10 +5,11 @@ const fs = require("fs").promises;
 class Settings {
     constructor(
         paths, env, outputFormat, audioOutputFormat, downloadPath,
-        proxy, rateLimit, autoFillClipboard, noPlaylist, globalShortcut, spoofUserAgent,
+        proxy, rateLimit, autoFillClipboard, noPlaylist, globalShortcut, userAgent,
         validateCertificate, enableEncoding, taskList, nameFormat, nameFormatMode,
-        sizeMode, splitMode, maxConcurrent, updateBinary, downloadType, updateApplication, cookiePath,
-        statSend, downloadMetadata, downloadThumbnail, keepUnmerged, calculateTotalSize, theme
+        sizeMode, splitMode, maxConcurrent, retries, fileAccessRetries, updateBinary, downloadType, updateApplication, cookiePath,
+        statSend, sponsorblockMark, sponsorblockRemove, sponsorblockApi, downloadMetadata, downloadJsonMetadata,
+        downloadThumbnail, keepUnmerged, avoidFailingToSaveDuplicateFileName, calculateTotalSize, theme
     ) {
         this.paths = paths;
         this.env = env
@@ -20,19 +21,26 @@ class Settings {
         this.autoFillClipboard = autoFillClipboard == null ? true : autoFillClipboard;
         this.noPlaylist = noPlaylist == null ? false : noPlaylist;
         this.globalShortcut = globalShortcut == null ? true : globalShortcut;
-        this.spoofUserAgent = spoofUserAgent == null ? true : spoofUserAgent;
+        this.userAgent = userAgent == null ? "spoof" : userAgent;
         this.validateCertificate = validateCertificate == null ? false : validateCertificate;
         this.enableEncoding = enableEncoding == null ? false : enableEncoding;
         this.taskList = taskList == null ? true : taskList;
         this.nameFormat = nameFormat == null ? "%(title).200s-(%(height)sp%(fps).0d).%(ext)s" : nameFormat;
         this.nameFormatMode = nameFormatMode == null ? "%(title).200s-(%(height)sp%(fps).0d).%(ext)s" : nameFormatMode;
+        this.sponsorblockMark = sponsorblockMark == null ? "" : sponsorblockMark;
+        this.sponsorblockRemove = sponsorblockRemove == null ? "" : sponsorblockRemove;
+        this.sponsorblockApi = sponsorblockApi == null ? "https://sponsor.ajay.app" : sponsorblockApi;
         this.downloadMetadata = downloadMetadata == null ? true : downloadMetadata;
+        this.downloadJsonMetadata = downloadJsonMetadata == null ? false : downloadJsonMetadata;
         this.downloadThumbnail = downloadThumbnail == null ? false : downloadThumbnail;
         this.keepUnmerged = keepUnmerged == null ? false : keepUnmerged;
+        this.avoidFailingToSaveDuplicateFileName = avoidFailingToSaveDuplicateFileName == null ? false : avoidFailingToSaveDuplicateFileName;
         this.calculateTotalSize = calculateTotalSize == null ? true : calculateTotalSize;
         this.sizeMode = sizeMode == null ? "click" : sizeMode;
         this.splitMode = splitMode == null? "49" : splitMode;
-        this.maxConcurrent = (maxConcurrent == null || maxConcurrent <= 0) ? Math.round(os.cpus().length / 2) : maxConcurrent; //Max concurrent is standard half of the system's available cores
+        this.maxConcurrent = (maxConcurrent == null || maxConcurrent <= 0) ? this.getDefaultMaxConcurrent() : maxConcurrent; //Max concurrent is standard half of the system's available cores
+        this.retries = retries || 10;
+        this.fileAccessRetries = fileAccessRetries || 3;
         this.updateBinary = updateBinary == null ? true : updateBinary;
         this.downloadType = downloadType == null ? "video" : downloadType;
         this.updateApplication = updateApplication == null ? true : updateApplication;
@@ -40,6 +48,17 @@ class Settings {
         this.statSend = statSend == null ? false : statSend;
         this.theme = theme == null ? "dark" : theme;
         this.setGlobalShortcuts();
+    }
+
+    getDefaultMaxConcurrent() {
+        let halfOfCpus = Math.round(os.cpus().length / 2);
+
+        //When os.cpus() returns an empty list, default to 4
+        if (halfOfCpus <= 0) {
+            halfOfCpus = 4;
+        }
+
+        return halfOfCpus;
     }
 
     static async loadFromFile(paths, env) {
@@ -57,7 +76,7 @@ class Settings {
                 data.autoFillClipboard,
                 data.noPlaylist,
                 data.globalShortcut,
-                data.spoofUserAgent,
+                data.userAgent,
                 data.validateCertificate,
                 data.enableEncoding,
                 data.taskList,
@@ -66,14 +85,21 @@ class Settings {
                 data.sizeMode,
                 data.splitMode,
                 data.maxConcurrent,
+                data.retries,
+                data.fileAccessRetries,
                 data.updateBinary,
                 data.downloadType,
                 data.updateApplication,
                 data.cookiePath,
                 data.statSend,
+                data.sponsorblockMark,
+                data.sponsorblockRemove,
+                data.sponsorblockApi,
                 data.downloadMetadata,
+                data.downloadJsonMetadata,
                 data.downloadThumbnail,
                 data.keepUnmerged,
+                data.avoidFailingToSaveDuplicateFileName,
                 data.calculateTotalSize,
                 data.theme
             );
@@ -94,15 +120,20 @@ class Settings {
         this.autoFillClipboard = settings.autoFillClipboard;
         this.noPlaylist = settings.noPlaylist;
         this.globalShortcut = settings.globalShortcut;
-        this.spoofUserAgent = settings.spoofUserAgent;
+        this.userAgent = settings.userAgent;
         this.validateCertificate = settings.validateCertificate;
         this.enableEncoding = settings.enableEncoding;
         this.taskList = settings.taskList;
         this.nameFormat = settings.nameFormat;
         this.nameFormatMode = settings.nameFormatMode;
+        this.sponsorblockMark = settings.sponsorblockMark;
+        this.sponsorblockRemove = settings.sponsorblockRemove;
+        this.sponsorblockApi = settings.sponsorblockApi;
         this.downloadMetadata = settings.downloadMetadata;
+        this.downloadJsonMetadata = settings.downloadJsonMetadata;
         this.downloadThumbnail = settings.downloadThumbnail;
         this.keepUnmerged = settings.keepUnmerged;
+        this.avoidFailingToSaveDuplicateFileName = settings.avoidFailingToSaveDuplicateFileName;
         this.calculateTotalSize = settings.calculateTotalSize;
         this.sizeMode = settings.sizeMode;
         this.splitMode = settings.splitMode;
@@ -110,6 +141,8 @@ class Settings {
             this.maxConcurrent = settings.maxConcurrent;
             this.env.changeMaxConcurrent(settings.maxConcurrent);
         }
+        this.retries = settings.retries;
+        this.fileAccessRetries = settings.fileAccessRetries;
         this.updateBinary = settings.updateBinary;
         this.downloadType = settings.downloadType;
         this.updateApplication = settings.updateApplication;
@@ -131,7 +164,7 @@ class Settings {
             autoFillClipboard: this.autoFillClipboard,
             noPlaylist: this.noPlaylist,
             globalShortcut: this.globalShortcut,
-            spoofUserAgent: this.spoofUserAgent,
+            userAgent: this.userAgent,
             validateCertificate: this.validateCertificate,
             enableEncoding: this.enableEncoding,
             taskList: this.taskList,
@@ -140,15 +173,22 @@ class Settings {
             sizeMode: this.sizeMode,
             splitMode: this.splitMode,
             maxConcurrent: this.maxConcurrent,
-            defaultConcurrent: Math.round(os.cpus().length / 2),
+            retries: this.retries,
+            fileAccessRetries: this.fileAccessRetries,
+            defaultConcurrent: this.getDefaultMaxConcurrent(),
             updateBinary: this.updateBinary,
             downloadType: this.downloadType,
             updateApplication: this.updateApplication,
             cookiePath: this.cookiePath,
             statSend: this.statSend,
+            sponsorblockMark: this.sponsorblockMark,
+            sponsorblockRemove: this.sponsorblockRemove,
+            sponsorblockApi: this.sponsorblockApi,
             downloadMetadata: this.downloadMetadata,
+            downloadJsonMetadata: this.downloadJsonMetadata,
             downloadThumbnail: this.downloadThumbnail,
             keepUnmerged: this.keepUnmerged,
+            avoidFailingToSaveDuplicateFileName: this.avoidFailingToSaveDuplicateFileName,
             calculateTotalSize: this.calculateTotalSize,
             theme: this.theme,
             version: this.env.version
@@ -156,7 +196,6 @@ class Settings {
     }
 
     save() {
-        console.log(this.serialize());
         fs.writeFile(this.paths.settings, JSON.stringify(this.serialize()), "utf8").then(() => {
             console.log("Saved settings file.")
         });
