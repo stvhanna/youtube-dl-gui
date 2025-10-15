@@ -36,6 +36,7 @@ async function init() {
     //Updates the placeholder to a copied link
     window.main.receive("updateLinkPlaceholder", (args) => {
         $('#add-url').prop("placeholder", args.text);
+        $('#add-url').focus();
         linkCopied = args.copied;
     });
 
@@ -832,23 +833,21 @@ function updateProgress(args) {
         $(card).find('.progress-bar').attr('aria-valuenow', args.progress.percentage.slice(0,-1)).css('width', args.progress.percentage);
         $(card).find('.progress small').html(`${args.progress.percentage} - ${args.progress.done} of ${args.progress.total} `);
     } else if(args.progress.percentage != null) {
-        if(parseFloat(args.progress.percentage.slice(0, -1)) > parseFloat($(card).find('.progress-bar').attr("aria-valuenow"))) {
-            $(card).find('.progress-bar').attr('aria-valuenow', args.progress.percentage.slice(0,-1)).css('width', args.progress.percentage);
-            if(args.progress.percentage.slice(0, -1) === "100.0") {
-                $(card).find('.progress-bar').addClass("progress-bar-striped")
-                $(card).find('.progress small').html("Converting with FFmpeg");
-            } else {
-                if (args.progress.isAudio == null) $(card).find('.progress small').html("Downloading item - " + args.progress.percentage);
-                else $(card).find('.progress small').html((args.progress.isAudio ? "Downloading audio" : "Downloading video") + " - " + args.progress.percentage);
-            }
-            if(!progressCooldown.includes(args.identifier)) {
-                progressCooldown.push(args.identifier);
-                $(card).find('.metadata.right').html('<strong>ETA: </strong>' + args.progress.eta).show();
-                $(card).find('.metadata.left').html('<strong>Speed: </strong>' + args.progress.speed).show();
-                setTimeout(() => {
-                    progressCooldown = progressCooldown.filter(item => item !== args.identifier);
-                }, 200);
-            }
+        $(card).find('.progress-bar').attr('aria-valuenow', args.progress.percentage.slice(0,-1)).css('width', args.progress.percentage);
+        if(args.progress.percentage === "100.0%") {
+            $(card).find('.progress-bar').addClass("progress-bar-striped")
+            $(card).find('.progress small').html("Converting with FFmpeg");
+        } else {
+            if (args.progress.isAudio == null) $(card).find('.progress small').html("Downloading item - " + args.progress.percentage);
+            else $(card).find('.progress small').html((args.progress.isAudio ? "Downloading audio" : "Downloading video") + " - " + args.progress.percentage);
+        }
+        if(!progressCooldown.includes(args.identifier)) {
+            progressCooldown.push(args.identifier);
+            $(card).find('.metadata.right').html('<strong>ETA: </strong>' + args.progress.eta).show();
+            $(card).find('.metadata.left').html('<strong>Speed: </strong>' + args.progress.speed).show();
+            setTimeout(() => {
+                progressCooldown = progressCooldown.filter(item => item !== args.identifier);
+            }, 200);
         }
     }
 }
@@ -1001,6 +1000,7 @@ async function getSettings() {
     $('#sponsorblockApi').val(settings.sponsorblockApi);
     $('#downloadMetadata').prop('checked', settings.downloadMetadata);
     $('#downloadJsonMetadata').prop('checked', settings.downloadJsonMetadata);
+    $('#compatFilename').prop('checked', settings.compatFilename);
     $('#downloadThumbnail').prop('checked', settings.downloadThumbnail);
     $('#keepUnmerged').prop('checked', settings.keepUnmerged);
     $('#avoidFailingToSaveDuplicateFileName').prop('checked', settings.avoidFailingToSaveDuplicateFileName);
@@ -1012,7 +1012,7 @@ async function getSettings() {
     $('#sizeSetting').val(settings.sizeMode);
     $('#splitMode').val(settings.splitMode);
     $('#theme').val(settings.theme);
-    $('#version').html("<strong>Version: </strong>" + settings.version);
+    $('#version').html("<strong>Version: </strong><a href='https://github.com/StefanLobbenmeier/youtube-dl-gui/releases/tag/v" + settings.version + "' target='_blank'>" + settings.version + " &#128279;</a>");
     window.settings = settings;
 }
 
@@ -1037,6 +1037,7 @@ function sendSettings() {
         sponsorblockApi: $('#sponsorblockApi').val(),
         downloadMetadata: $('#downloadMetadata').prop('checked'),
         downloadJsonMetadata: $('#downloadJsonMetadata').prop('checked'),
+        compatFilename: $('#compatFilename').prop('checked'),
         downloadThumbnail: $('#downloadThumbnail').prop('checked'),
         keepUnmerged: $('#keepUnmerged').prop('checked'),
         avoidFailingToSaveDuplicateFileName: $('#avoidFailingToSaveDuplicateFileName').prop('checked'),

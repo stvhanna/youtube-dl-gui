@@ -1,10 +1,10 @@
 {
   "name": "youtube-dl-gui",
-  "version": "2.5.3",
+  "version": "2.5.6",
   "description": "Open Video Downloader",
   "main": "main.js",
   "scripts": {
-    "start": "electron . --dev",
+    "start": "electron . --dev --ozone-platform-hint=auto",
     "build": "electron-builder",
     "lint": "eslint {**/modules/**/*.js,*.js} && eslint renderer/*.js",
     "test": "jest --coverage",
